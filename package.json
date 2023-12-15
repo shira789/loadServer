@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "type": "module",
+  "name": "node_server",
+  "description": "try to crush me",
+  "main": "index.js",
+  "author": "Shira Amar",
+  "license": "ISC",
+  "scripts": {
+    "start": "node ./src/index.js"
+  },
+  "devDependencies": {},
+  "dependencies": {
+    "fastify": "^4.24.3"
+  }
+}
