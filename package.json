@@ -9,8 +9,8 @@
   "scripts": {
     "start": "node ./src/index.js"
   },
-  "devDependencies": {},
   "dependencies": {
-    "fastify": "^4.24.3"
+    "fastify": "^4.24.3",
+    "fastify-metrics": "^10.4.1"
   }
 }

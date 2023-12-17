@@ -1,16 +1,14 @@
 
 import { wait, randNumber } from './util.js';
-import { mockStudents } from './students.js';
+import { calcGrade, buildMockStudents } from './students.js';
 import { fastify } from 'fastify';
-// const { wait, randNumber } = require('./util.js');
-// const mockStudents = require('./students.js');
-// const fastify = require('fastify')({ logger: true });
+import fastifyMetrics from 'fastify-metrics';
 
 const port = 3000;
 let counter = 0;
-let students = mockStudents;
-
+let students = buildMockStudents(1000);
 const app = fastify({ logger: false });
+app.register(fastifyMetrics, { endpoint: '/metrics' });
 
 // GET route to fetch all students
 app.get('/students', async (request, reply) => {
@@ -27,7 +25,8 @@ app.post('/students/insert', async (request, reply) => {
 
   const newStudent = {
     id, 
-    name: `Student ${id}`
+    name: `Student ${id}`,
+    grade: calcGrade()
   };
 
   students.push(newStudent);
@@ -42,10 +41,15 @@ app.put('/students/update', (request, reply) => {
   const index = students.findIndex((student) => student.id === studentId);
   
   if (index === -1) {
-    reply.code(404).send({ error: 'Student not found' });
+    reply.code(404).send({
+       message: 'failed to update student',
+       totalStudents: students.length,
+       err: 'Student not found' 
+      });
   };
 
   const updated = students[index].id + 1;
+
   students[index] = { 
     ...students[index],
     updated
@@ -57,16 +61,19 @@ app.put('/students/update', (request, reply) => {
 
 // DELETE route to delete a student
 app.delete('/students/remove', async (request, reply) => {
-  const studentId = randNumber(students.length);
-  const index = students.findIndex((student) => student.id === studentId);
+  counter ++;
 
-  if (index === -1) {
-    reply.code(404).send({ error: 'Student not found' });
+  try {
+    const removedStudent = students.splice(Math.floor(Math.random() * students.length), 1);
+    console.log({message: 'delete', counter});
+    return {counter, message: 'Student deleted successfully', removedStudent };
   }
-
-  const deletedStudent = students.splice(index, 1);
-  console.log({message: 'delete', counter});
-  return {counter, message: 'Student deleted successfully', student: deletedStudent[0] };
+  catch (err) {
+    reply.status(404).send({
+      message: 'failed to remove a student',
+      err
+    });
+  };
 });
 
 // Start the server
@@ -74,6 +81,7 @@ app.listen(port, 'localhost', (err) => {
   if (err) {
     fastify.log.error(err);
     process.exit(1);
-  }
+  };
+
   console.log(`Server is running at http://localhost:${port}`);
 });
